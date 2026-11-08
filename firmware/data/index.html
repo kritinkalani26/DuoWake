@@ -283,7 +283,7 @@ const S = {
   sel: { time: '07:00', gameId: null, tuneId: null, distanceM: 6, tuneStyle: '' },
   dirty: false, pollTimer: null, offset: 0, playing: null,
 };
-const RUN_PACE = 2.5, LEG_SLACK = 2;            // mirrors alarm_config.h
+const RUN_PACE = 1.5, LEG_SLACK = 3;            // mirrors alarm_config.h
 const SPRINT_LIKE = new Set(['sprint', 'random', 'surprise']);
 const KNOWN_ICONS = new Set(['reaction', 'rotate', 'sprint', 'random', 'surprise']);
 const NOTE_HZ = { C5:523,'C#5':554,D5:587,'D#5':622,E5:659,F5:698,'F#5':740,G5:784,'G#5':831,A5:880,'A#5':932,B5:988,C6:1047,'C#6':1109,D6:1175,'D#6':1245,E6:1319,F6:1397,'F#6':1480,G6:1568,'G#6':1661,A6:1760,'A#6':1865,B6:1976 };

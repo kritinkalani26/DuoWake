@@ -4,6 +4,7 @@
 // This game runs on MASTER only; SLAVE just obeys RING/STOP/FAIL_BEEP/SET_LEDS and reports BUTTON_PRESSED.
 #pragma once
 #include "game.h"
+#include "espnow_link.h"
 
 class GameSprint : public Game {
 public:
@@ -25,9 +26,14 @@ private:
   uint32_t _allowedMs = 10000;
   uint32_t _pauseEnd = 0;
   float    _distance = 5.0f;
+  MsgType  _slaveCmd = MSG_STOP;     // what the slave should currently be doing; repeated from update()
+  uint32_t _slaveResendAt = 0;
 
+  uint8_t progressLeds() const;
+  void commandSlave(MsgType cmd);
   void ringMaster(bool on);
   void showProgress();
   void fail(uint32_t legMs);
+  void complete();
   bool legOk(uint32_t now, uint32_t& legMs);
 };

@@ -3,8 +3,8 @@
 #include <stdint.h>
 
 // --- Sprint game ---
-constexpr float    RUN_PACE_MPS = 2.5f;   // assumed running pace, meters/second
-constexpr float    LEG_SLACK_S  = 2.0f;   // extra seconds per leg
+constexpr float    RUN_PACE_MPS = 1.5f;   // assumed pace, meters/second (brisk walk; 2.5 was a sprint and failed every bench test)
+constexpr float    LEG_SLACK_S  = 3.0f;   // extra seconds per leg (find the button, press, radio round trip)
 constexpr uint8_t  SPRINT_LEGS  = 4;      // A->B->A->B->A
 
 // --- Reaction game ---

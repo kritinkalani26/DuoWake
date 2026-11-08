@@ -159,6 +159,10 @@ pio run -e test_buzzer -t upload && pio device monitor -b 115200
 MASTER rings → press A → MASTER silent, SLAVE rings, leg timer starts → press B → SLAVE silent, reports
 `BUTTON_PRESSED`, MASTER checks leg time and rings again → … 4 legs (A→B→A→B→A). A leg over the limit
 (also detected live, without waiting for a late press) beeps both clocks and restarts from leg 1.
+That is 5 presses in total (A, B, A, B, A); the ring keeps completed legs green (3 LEDs per leg) even while
+ringing. Allowed time per leg = distance / `RUN_PACE_MPS` + `LEG_SLACK_S` (5 m -> 6.3 s). ESP-NOW has no
+retry, so MASTER repeats the slave's current order (RING/STOP) every 500 ms while the game is live and
+SLAVE repeats each BUTTON_PRESSED 3 times (MASTER counts presses within 300 ms once).
 
 ## ESP-NOW + WiFi coexistence
 Both boards join the hotspot in station mode. On connect, `EspNowLink::lockChannel()` re-adds the peer on the

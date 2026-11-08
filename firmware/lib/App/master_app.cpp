@@ -22,8 +22,13 @@ namespace {
   uint32_t _lastHeartbeat = 0;
 
   // ---------- ESP-NOW ----------
+  uint32_t _lastSlavePress = 0;
   void onLink(const LinkMsg& m) {
-    if (m.type == MSG_BUTTON_PRESSED) AlarmRunner::onButton(CLOCK_SLAVE);
+    if (m.type != MSG_BUTTON_PRESSED) return;
+    uint32_t now = millis();
+    if (now - _lastSlavePress < 300) return;   // the slave repeats each press a few times; count it once
+    _lastSlavePress = now;
+    AlarmRunner::onButton(CLOCK_SLAVE);
   }
 
   // ---------- WiFi ----------

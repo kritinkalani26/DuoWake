@@ -15,6 +15,7 @@ namespace {
   String   _gameId;
   String   _tuneName;
   uint32_t _doneAt = 0;
+  uint32_t _lastStopResend = 0;
   constexpr uint32_t CELEBRATE_MS = 4000;
 
   void destroyGame() {
@@ -87,9 +88,13 @@ void AlarmRunner::update(uint32_t now) {
       break;
     case DONE:
       Ring::breathe(now, CRGB::Green);
+      // ESP-NOW has no retry: repeat STOP once a second during the celebration so a lost packet
+      // can never leave the slave ringing after the game is over.
+      if (now - _lastStopResend >= 1000) { _lastStopResend = now; EspNowLink::send(MSG_STOP); EspNowLink::send(MSG_SET_LEDS, Ring::count()); }
       if (now - _doneAt > CELEBRATE_MS) {
         destroyGame();
         Ring::off();
+        EspNowLink::send(MSG_STOP);
         EspNowLink::send(MSG_SET_LEDS, 0);
         _state = IDLE;
         Serial.println("[runner] idle");

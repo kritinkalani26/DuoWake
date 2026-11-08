@@ -21,17 +21,24 @@ namespace {
     Ring::show();
   }
 
+  uint8_t  _pressResends = 0;      // BUTTON_PRESSED is repeated a few times: ESP-NOW has no retry
+  uint32_t _pressResendAt = 0;
+  constexpr uint8_t  PRESS_RESEND_COUNT = 2;
+  constexpr uint16_t PRESS_RESEND_MS    = 70;
+
   void silence() {
+    bool was = _ringing;
     _ringing = false;
     MelodyPlayer::stop();
     Buzzer::stopPattern();
     showProgress();
-    Serial.println("[slave] silent");
+    if (was) Serial.println("[slave] silent");
   }
 
   void onLink(const LinkMsg& m) {
     switch (m.type) {
       case MSG_RING:
+        if (_ringing) break;           // master repeats RING; don't restart the melody
         _ringing = true;
         MelodyPlayer::play();
         Serial.println("[slave] RINGING");
@@ -96,7 +103,12 @@ void SlaveApp::loop() {
   if (Button::pressed()) {
     Serial.printf("[slave] button pressed (%s) -> BUTTON_PRESSED\n", _ringing ? "ringing" : "idle");
     EspNowLink::send(MSG_BUTTON_PRESSED);
+    _pressResends = PRESS_RESEND_COUNT; _pressResendAt = now + PRESS_RESEND_MS;
     if (_ringing) silence();
+  }
+  if (_pressResends && (int32_t)(now - _pressResendAt) >= 0) {
+    _pressResends--; _pressResendAt = now + PRESS_RESEND_MS;
+    EspNowLink::send(MSG_BUTTON_PRESSED);   // master ignores duplicates within 300 ms
   }
 
   if (now - _lastHeartbeat >= 10000) {

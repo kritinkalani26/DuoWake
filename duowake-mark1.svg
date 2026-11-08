@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="1024" height="1024">
+<title>DuoWake mark</title>
+<g transform="translate(-5 0)">
+<path d="M-24 0A24 20 0 0 1 24 0Z" transform="translate(43.8 40.6) rotate(-42)" fill="#1D1D1F"/>
+<path d="M100 25A78 78 0 0 0 100 181Z" fill="#1D1D1F"/>
+<path d="M100 67A58 46 0 0 0 100 159Z" fill="#FFFFFF"/>
+<ellipse cx="61.5" cy="111.9" rx="34.7" ry="10" transform="rotate(-25 61.5 111.9)" fill="#1D1D1F"/>
+<circle cx="80.5" cy="103" r="5.5" fill="#FFFFFF"/>
+<path d="M100 117A9.5 6.5 0 0 0 100 130Z" fill="#1D1D1F"/>
+</g>
+<g transform="translate(5 0)">
+<path d="M-24 0A24 20 0 0 1 24 0Z" transform="translate(156.2 40.6) rotate(42)" fill="#1D1D1F"/>
+<path d="M100 25A78 78 0 0 1 100 181Z" fill="#1D1D1F"/>
+<path d="M100 67A58 46 0 0 1 100 159Z" fill="#FFFFFF"/>
+<ellipse cx="138.5" cy="111.9" rx="34.7" ry="10" transform="rotate(25 138.5 111.9)" fill="#1D1D1F"/>
+<circle cx="119.5" cy="103" r="5.5" fill="#FFFFFF"/>
+<path d="M100 117A9.5 6.5 0 0 1 100 130Z" fill="#1D1D1F"/>
+</g>
+</svg>
