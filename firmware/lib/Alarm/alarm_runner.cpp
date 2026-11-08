@@ -58,12 +58,24 @@ bool AlarmRunner::start(const AlarmPlan& plan, const AlarmSettings& settings) {
 }
 
 bool AlarmRunner::startTest(const String& gameId, const String& tuneId) {
+  // Start from tomorrow's prepared plan. Concrete ids from the phone override it; pseudo ids
+  // ("new", "random", "surprise") keep what Gemini already prepared so the demo plays the melody
+  // the user just watched being composed, and only fall back to a local pick if no plan is ready.
   AlarmPlan p = AlarmScheduler::plan();
+  bool planReady = AlarmScheduler::planIsCurrent();
   if (gameId.length()) {
     if (GameRegistry::exists(gameId.c_str())) { p.game = gameId; p.reason = "Demo run from the phone."; }
-    else if (GameRegistry::isPseudo(gameId.c_str())) { p.game = GameRegistry::randomName(); p.reason = "Demo run: picked locally, no Gemini call."; }
+    else if (GameRegistry::isPseudo(gameId.c_str())) {
+      if (planReady && GameRegistry::exists(p.game.c_str())) p.reason = "Demo run of tomorrow's plan.";
+      else { p.game = GameRegistry::randomName(); p.reason = "Demo run: picked locally, no Gemini call."; }
+    }
   }
-  if (tuneId.length()) p.tune = (tuneId == "new") ? String("shuffle") : tuneId;   // "new" can't wait for Gemini in a demo
+  if (tuneId.length()) {
+    if (tuneId == "new") {
+      // Gemini can't be awaited in a demo: use the melody it already composed for this plan, else shuffle
+      if (!(planReady && p.tune.startsWith("gen:"))) p.tune = "shuffle";
+    } else p.tune = tuneId;
+  }
   if (!p.game.length()) p.game = GameRegistry::randomName();
   if (!p.tune.length()) p.tune = "shuffle";
   Serial.printf("[runner] TEST start game=%s tune=%s\n", p.game.c_str(), p.tune.c_str());
