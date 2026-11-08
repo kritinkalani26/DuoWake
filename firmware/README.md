@@ -140,6 +140,7 @@ Each test is a standalone `main.cpp` that exercises one module on real hardware 
 | `test_espnow`        | same binary on both boards: prints MAC, pings peer, button rings the other board    |
 | `test_gemini`        | joins hotspot, asks Gemini for a game pick + a melody, validates, saves, plays it   |
 | `test_webui`         | serves the UI with fake data so the HTML can be iterated (`-t uploadfs` first)      |
+| `test_pinscan`       | wiring finder: pull-ups on every GPIO, prints which pin your button really pulls LOW |
 
 ```
 pio run -e test_buzzer -t upload && pio device monitor -b 115200
