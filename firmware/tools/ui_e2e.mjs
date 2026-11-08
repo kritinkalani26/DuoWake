@@ -5,7 +5,7 @@
 // Usage:  python tools/mock_server.py   and   chrome --headless=new --remote-debugging-port=9222 --user-data-dir=<tmp>
 //         node tools/ui_e2e.mjs [http://127.0.0.1:8080/]
 const URL = process.argv[2] || 'http://127.0.0.1:8080/';
-const tabs = await (await fetch('http://127.0.0.1:9222/json/new?about:blank', { method: 'PUT' })).json();
+const tabs = await (await fetch('http://127.0.0.1:' + (process.env.CDP_PORT || '9222') + '/json/new?about:blank', { method: 'PUT' })).json();
 const ws = new WebSocket(tabs.webSocketDebuggerUrl);
 await new Promise(r => ws.onopen = r);
 let id = 0; const pending = new Map(); const logs = [];
