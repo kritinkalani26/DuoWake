@@ -31,6 +31,7 @@ constexpr const char* MDNS_NAME      = "duowake";
 
 // --- Gemini ---
 constexpr const char* GEMINI_MODEL = "gemini-flash-lite-latest";
+constexpr const char* GEMINI_MODEL_FALLBACK = "gemini-3.5-flash-lite";   // used on the last attempt if the primary keeps failing (gemini-2.5-flash 404s for new keys)
 constexpr uint16_t MELODY_MIN_NOTES = 8;
 constexpr uint16_t MELODY_MAX_NOTES = 16;
 constexpr uint16_t NOTE_MIN_MS = 50;

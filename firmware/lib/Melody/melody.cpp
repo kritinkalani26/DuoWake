@@ -63,27 +63,47 @@ const char* MelodyFormat::freqToName(uint16_t freq) {
   return "REST";
 }
 
+// Lenient parser: Gemini output is repaired rather than rejected wherever possible, because a rejected
+// melody means the alarm silently falls back to a built-in tune. Repairs: notes outside C5..B6 are moved
+// into range by octave, unknown note names are dropped, durations are clamped, long melodies are cut to
+// MELODY_MAX_NOTES. Only "fewer than MELODY_MIN_NOTES usable notes" is a hard failure.
 bool MelodyFormat::fromJson(JsonVariantConst v, Melody& out, String* err) {
   auto fail = [&](const String& s) { if (err) *err = s; return false; };
   if (!v.is<JsonObjectConst>()) return fail("root not object");
   JsonObjectConst o = v.as<JsonObjectConst>();
   const char* name = o["name"] | "";
-  if (!name || !*name) return fail("missing name");
+  if (!name || !*name) name = "Gemini Tune";
   JsonArrayConst notes = o["notes"].as<JsonArrayConst>();
   if (notes.isNull()) return fail("missing notes");
-  size_t n = notes.size();
-  if (n < MELODY_MIN_NOTES || n > MELODY_MAX_NOTES_STORED) return fail("note count " + String(n) + " out of range");
   Melody tmp;
   strlcpy(tmp.name, name, sizeof(tmp.name));
   tmp.count = 0;
+  uint8_t dropped = 0, fixed = 0;
   for (JsonVariantConst nv : notes) {
+    if (tmp.count >= MELODY_MAX_NOTES) break;
     const char* nn = nv["n"] | (const char*)nullptr;
-    int ms = nv["ms"] | -1;
+    int ms = nv["ms"] | 150;
     uint16_t f;
-    if (!nn || !noteToFreq(nn, f)) return fail("bad note name at " + String(tmp.count) + ": " + String(nn ? nn : "null"));
-    if (ms < (int)NOTE_MIN_MS || ms > (int)NOTE_MAX_MS) return fail("bad ms at " + String(tmp.count) + ": " + String(ms));
+    if (!nn || !*nn) { dropped++; continue; }
+    if (!noteToFreq(nn, f)) {
+      // out of range (e.g. "C4", "A7") -> shift the octave into C5..B6
+      char norm[5];
+      bool ok = false;
+      if (normalize(nn, norm, sizeof(norm))) {
+        char& oct = norm[strlen(norm) - 1];
+        if (oct < '5') oct = '5'; else if (oct > '6') oct = '6';
+        ok = noteToFreq(norm, f);
+      }
+      if (!ok) { dropped++; continue; }
+      fixed++;
+    }
+    if (ms < (int)NOTE_MIN_MS) { ms = NOTE_MIN_MS; fixed++; }
+    if (ms > (int)NOTE_MAX_MS) { ms = NOTE_MAX_MS; fixed++; }
     tmp.notes[tmp.count++] = { f, (uint16_t)ms };
   }
+  if (tmp.count < MELODY_MIN_NOTES)
+    return fail("only " + String(tmp.count) + " usable notes (" + String(dropped) + " dropped), need " + String(MELODY_MIN_NOTES));
+  if (dropped || fixed) Serial.printf("[melody] repaired '%s': %u notes kept, %u fixed, %u dropped\n", tmp.name, tmp.count, fixed, dropped);
   out = tmp;
   return true;
 }

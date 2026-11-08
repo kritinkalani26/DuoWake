@@ -12,7 +12,7 @@ namespace {
   const char* HOST = "https://generativelanguage.googleapis.com";
 
   // POST generateContent. On success fills modelText with the model's text part. Returns HTTP code (<0 = transport error).
-  int generate(const String& prompt, JsonDocument& schema, float temperature, String& modelText, String& err) {
+  int generate(const String& prompt, JsonDocument& schema, float temperature, String& modelText, String& err, const char* model = GEMINI_MODEL) {
     if (WiFi.status() != WL_CONNECTED) { err = "wifi down"; return -1; }
     JsonDocument req;
     JsonArray contents = req["contents"].to<JsonArray>();
@@ -26,7 +26,7 @@ namespace {
     String body;
     serializeJson(req, body);
 
-    String url = String(HOST) + "/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + _key;
+    String url = String(HOST) + "/v1beta/models/" + model + ":generateContent?key=" + _key;
     WiFiClientSecure client;
     client.setInsecure();           // hackathon: skip cert validation
     HTTPClient http;
@@ -34,7 +34,7 @@ namespace {
     http.setConnectTimeout(HTTP_TIMEOUT_MS);
     if (!http.begin(client, url)) { err = "http.begin failed"; return -2; }
     http.addHeader("Content-Type", "application/json");
-    Serial.printf("[gemini] POST %s (%u bytes)\n", GEMINI_MODEL, body.length());
+    Serial.printf("[gemini] POST %s (%u bytes)\n", model, body.length());
     uint32_t t0 = millis();
     int code = http.POST(body);
     String resp = http.getString();
@@ -89,14 +89,24 @@ bool GeminiClient::generateMelody(const String& existingNames, const String& sty
   }
   prompt += "Return only JSON matching the schema.";
 
-  for (uint8_t attempt = 1; attempt <= 2; attempt++) {
+  // 3 attempts: primary model twice, then the fallback model. Overload (503/429), timeouts and bad JSON all
+  // retry; only "wifi down", a bad key (400/403) or a missing primary+fallback model (404 on the last try) give up.
+  constexpr uint8_t ATTEMPTS = 3;
+  for (uint8_t attempt = 1; attempt <= ATTEMPTS; attempt++) {
+    const char* model = (attempt == ATTEMPTS) ? GEMINI_MODEL_FALLBACK : GEMINI_MODEL;
     String text;
-    int code = generate(prompt, schema, 1.0f, text, err);
-    if (code != 200) { _lastStatus = "melody failed: " + err; Serial.printf("[gemini] melody attempt %u: %s\n", attempt, err.c_str()); if (code == 404 || code == 400 || code == 403 || code == -1) return false; continue; }
+    int code = generate(prompt, schema, 1.0f, text, err, model);
+    if (code != 200) {
+      _lastStatus = "melody failed: " + err;
+      Serial.printf("[gemini] melody attempt %u (%s): %s\n", attempt, model, err.c_str());
+      if (code == -1 || code == 400 || code == 403) return false;
+      delay(400);
+      continue;
+    }
     String verr;
     if (MelodyFormat::fromJson(text.c_str(), out, &verr)) {
       _lastStatus = String("melody ok: ") + out.name;
-      Serial.printf("[gemini] melody '%s' valid (%u notes)\n", out.name, out.count);
+      Serial.printf("[gemini] melody '%s' valid (%u notes) via %s\n", out.name, out.count, model);
       return true;
     }
     err = "invalid melody: " + verr;

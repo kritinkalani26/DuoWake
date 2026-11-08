@@ -191,7 +191,7 @@ Generated melodies are saved as `/melodies/YYYY-MM-DD_<slug>.json` (tune id `gen
 and game ran on which date.
 
 ## Gemini
-`POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent` with
+`POST https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent` (falls back to `GEMINI_MODEL_FALLBACK` on the 3rd attempt; invalid notes are repaired, not rejected) with
 `responseMimeType: application/json` and a `responseSchema`. If the model name 404s, the client GETs
 `/v1beta/models` and logs the names that support `generateContent`; change `GEMINI_MODEL` in
 `lib/Hardware/alarm_config.h`.

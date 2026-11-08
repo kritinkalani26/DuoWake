@@ -55,7 +55,10 @@ namespace {
       String id;
       MelodyStore::randomBuiltin(m, &id);
       p.tune = id; p.melodyName = m.name;
-      p.reason += String(p.reason.length() ? " " : "") + "(No new Gemini melody this time, so it's '" + m.name + "'.)";
+      // Say WHY so a failure is diagnosable from the phone, not just from the serial log.
+      String why = useGemini ? err : String("Gemini was skipped");
+      if (why.length() > 90) why = why.substring(0, 90) + "...";
+      p.reason += String(p.reason.length() ? " " : "") + "(No new Gemini melody this time: " + why + ". Playing '" + m.name + "' instead.)";
       return;
     }
     if (s.tune == "shuffle") {   // decided at alarm time
