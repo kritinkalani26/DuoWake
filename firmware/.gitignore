@@ -1,0 +1,5 @@
+.pio/
+.vscode/
+include/secrets.h
+data/melodies/
+data/history.json
