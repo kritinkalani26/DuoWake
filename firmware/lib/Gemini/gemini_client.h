@@ -9,8 +9,9 @@ namespace GeminiClient {
   void begin(const char* apiKey);
 
   // Ask for a brand-new 8-16 note alarm melody. existingNames = comma list so it varies.
+  // style = optional free text from the user ("spooky", "8-bit boss fight"); "" = default energetic wake-up.
   // Validates; retries once on invalid output. Returns false (with err) if both attempts fail.
-  bool generateMelody(const String& existingNames, Melody& out, String& err);
+  bool generateMelody(const String& existingNames, const String& style, Melody& out, String& err);
 
   // Ask Gemini to pick one of the games. historyJson = recent history array (may be "[]").
   // gamesCsv = "reaction,rotate,sprint". Returns game + playful reason.

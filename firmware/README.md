@@ -76,7 +76,8 @@ so adding a game or a tune needs zero HTML changes. Top to bottom: status strip 
 Clock B link dot, device time), big time picker, game cards (one per registry game plus Random and
 Surprise me, with little CSS icons), tune list (New Gemini melody and Shuffle pinned, then saved Gemini
 melodies newest first, then built-ins, each with a 12-bar pitch "waveform"), distance slider (only for
-Dash/Random/Surprise, shows allowed seconds per leg), **Set alarm**, and a "Tomorrow's plan" panel that
+Dash/Random/Surprise, shows allowed seconds per leg), a **style box** (only for New Gemini melody / Surprise me: free text like
+"spooky" or "8-bit boss fight", max 80 chars, sent as `tuneStyle` and appended to the Gemini melody prompt), **Set alarm**, and a "Tomorrow's plan" panel that
 shows "Gemini is composing…" and polls until the plan is filled in. The collapsed **More** section has Test
 alarm now, Sync time from phone, History, and the demo-only Stop.
 
@@ -91,7 +92,7 @@ alarm now, Sync time from phone, History, and the demo-only Stop.
 |--------|---------------------|---------------------------------------------------------------------|
 | GET    | `/api/state`        | settings, nextAlarm (+epoch), plan {gameName,tuneName,geminiReason,pending}, wifi, link, uptime, isRinging |
 | GET    | `/api/options`      | `{games:[{id,name,tagline}], tunes:[{id,name,source,date,bars}]}`   |
-| POST   | `/api/settings`     | `{alarmTime:"HH:MM", gameId, tuneId, distanceM}` → validated, saved to NVS, Gemini prep queued, returns new state |
+| POST   | `/api/settings`     | `{alarmTime:"HH:MM", gameId, tuneId, distanceM, tuneStyle?}` → validated, saved to NVS, Gemini prep queued, returns new state |
 | POST   | `/api/test`         | `{gameId?, tuneId?}` start now (pseudo ids resolved locally, `new` → shuffle) |
 | POST   | `/api/stop`         | emergency stop, logged loudly                                       |
 | POST   | `/api/time`         | `{epoch}` manual sync                                               |

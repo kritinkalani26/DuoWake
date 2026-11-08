@@ -133,6 +133,13 @@ input[type=time]::-webkit-datetime-edit{padding:0}
 input[type=range]{width:100%;accent-color:var(--sun2);height:28px}
 .slider .leg{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 .slider .leg b{color:var(--ink)}
+.stylebox{display:none;padding:14px 16px 12px;margin-top:10px}
+.stylebox.show{display:block;animation:rise .3s ease-out}
+.stylebox label{display:block;font-size:14px;margin-bottom:8px}
+.stylebox input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:var(--ink);background:var(--glass2);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;outline:none}
+.stylebox input:focus{border-color:var(--sun2)}
+.stylebox input::placeholder{color:var(--muted)}
+.stylebox .hint{margin-top:8px}
 
 /* ---------- set + plan ---------- */
 .setbtn{width:100%;padding:18px;border-radius:999px;background:var(--sun);color:#fff;font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:.01em;box-shadow:0 14px 40px rgba(255,94,122,.35);position:relative;overflow:hidden;margin-top:18px;transition:transform .12s,opacity .2s}
@@ -249,6 +256,11 @@ details summary::after{content:"";flex:1;height:1px;background:linear-gradient(9
     <section class="col">
       <h2 class="o4">Choose the tune</h2>
       <div class="o5" id="tunes"></div>
+      <div class="glass stylebox o5" id="stylebox">
+        <label for="style">What should it sound like?</label>
+        <input type="text" id="style" maxlength="80" placeholder="spooky · 8-bit boss fight · gentle but insistent" autocomplete="off">
+        <div class="hint">Gemini follows this when it composes tonight. Leave empty for a surprise.</div>
+      </div>
       <details class="o9">
         <summary>More</summary>
         <div class="btnrow">
@@ -268,7 +280,7 @@ details summary::after{content:"";flex:1;height:1px;background:linear-gradient(9
 /* ======================= STATE ======================= */
 const S = {
   options: null, state: null, optionsVersion: null,
-  sel: { time: '07:00', gameId: null, tuneId: null, distanceM: 6 },
+  sel: { time: '07:00', gameId: null, tuneId: null, distanceM: 6, tuneStyle: '' },
   dirty: false, pollTimer: null, offset: 0, playing: null,
 };
 const RUN_PACE = 2.5, LEG_SLACK = 2;            // mirrors alarm_config.h
@@ -410,7 +422,7 @@ function tuneRow(t) {
 /* ======================= RENDER ======================= */
 function renderGames() {
   $('games').innerHTML = S.options.games.map(gameCard).join('');
-  $('games').querySelectorAll('.gcard').forEach(b => b.onclick = () => { S.sel.gameId = b.dataset.id; S.dirty = true; renderGames(); renderSlider(); ring.setMode(b.dataset.id); });
+  $('games').querySelectorAll('.gcard').forEach(b => b.onclick = () => { S.sel.gameId = b.dataset.id; S.dirty = true; renderGames(); renderSlider(); renderStyle(); ring.setMode(b.dataset.id); });
   const g = S.options.games.find(x => x.id === S.sel.gameId); if (g) $('ringhint').textContent = `Ring preview · ${g.name}`;
 }
 function renderTunes() {
@@ -421,6 +433,13 @@ function renderTunes() {
     if (p) { e.stopPropagation(); togglePreview(p.dataset.play); return; }
     S.sel.tuneId = b.dataset.id; S.dirty = true; renderTunes();
   });
+  renderStyle();
+}
+// Free-text style for Gemini: only matters when a new melody will be composed (tune "new" or game "surprise").
+function renderStyle() {
+  const show = S.sel.tuneId === 'new' || S.sel.gameId === 'surprise';
+  $('stylebox').classList.toggle('show', show);
+  if (document.activeElement !== $('style')) $('style').value = S.sel.tuneStyle || '';
 }
 function togglePreview(id) {
   if (S.playing === id) { audio.stop(); S.playing = null; renderTunes(); return; }
@@ -494,8 +513,8 @@ function renderHistory(h) {
 }
 function fillFormFromState() {
   const s = S.state.settings;
-  S.sel = { time: s.alarmTime, gameId: s.gameId, tuneId: s.tuneId, distanceM: s.distanceM || 6 };
-  $('time').value = s.alarmTime; renderGames(); renderTunes(); renderSlider(); ring.setMode(s.gameId);
+  S.sel = { time: s.alarmTime, gameId: s.gameId, tuneId: s.tuneId, distanceM: s.distanceM || 6, tuneStyle: s.tuneStyle || '' };
+  $('time').value = s.alarmTime; renderGames(); renderTunes(); renderSlider(); renderStyle(); ring.setMode(s.gameId);
 }
 
 /* ======================= CONTROLLER ======================= */
@@ -521,10 +540,11 @@ const onTimePick = () => { if (!$('time').value) return; S.sel.time = $('time').
 $('time').addEventListener('input', onTimePick);
 $('time').addEventListener('change', onTimePick);     // Android fires change reliably, input not always
 $('dist').addEventListener('input', () => { S.sel.distanceM = parseFloat($('dist').value); S.dirty = true; renderSlider(); });
+$('style').addEventListener('input', () => { S.sel.tuneStyle = $('style').value; S.dirty = true; });
 $('set').onclick = async () => {
   const b = $('set'); b.disabled = true; b.textContent = 'Setting…'; audio.stop(); S.playing = null;
   try {
-    const r = await api.settings({ alarmTime: S.sel.time, gameId: S.sel.gameId, tuneId: S.sel.tuneId, distanceM: S.sel.distanceM });
+    const r = await api.settings({ alarmTime: S.sel.time, gameId: S.sel.gameId, tuneId: S.sel.tuneId, distanceM: S.sel.distanceM, tuneStyle: (S.sel.tuneStyle || '').trim() });
     if (r.error) toast('Rejected: ' + r.error);
     else {
       S.state = r; S.dirty = false; S.offset = r.now - Math.floor(Date.now() / 1000); renderStrip(); renderPlan();

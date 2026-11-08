@@ -41,9 +41,14 @@ namespace {
     Melody m;
     if (wantNew) {
       String err;
-      if (useGemini && GeminiClient::generateMelody(MelodyStore::allNames(), m, err)) {
+      if (useGemini && GeminiClient::generateMelody(MelodyStore::allNames(), s.tuneStyle, m, err)) {
         String id = MelodyStore::save(m, TimeKeeper::dateString());
-        if (id.length()) { p.tune = id; p.melodyName = m.name; return; }
+        if (id.length()) {
+          p.tune = id; p.melodyName = m.name;
+          if (s.tuneStyle.length())
+            p.reason += String(p.reason.length() ? " " : "") + "Tonight's tune '" + m.name + "' is my take on \"" + s.tuneStyle + "\".";
+          return;
+        }
         err = "save failed";
       }
       if (useGemini) Serial.printf("[prep] Gemini melody failed (%s) -> random builtin\n", err.c_str());

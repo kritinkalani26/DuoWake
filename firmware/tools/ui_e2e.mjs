@@ -66,6 +66,20 @@ await sleep(5500);
 const afterPoll = await evalJs(`({cd: document.getElementById('countdown').textContent, time: document.getElementById('time').value})`);
 check('value survives the 5 s poll', afterPoll.time === newTime && !/would/.test(afterPoll.cd), JSON.stringify(afterPoll));
 
+// ---- 4. tune style: box appears only for "new"/"surprise", text round-trips through the backend ----
+await evalJs(`document.querySelector('.tune[data-id="builtin:siren_stairs"]')?.click()`); await sleep(200);
+const hiddenForBuiltin = await evalJs(`!document.getElementById('stylebox').classList.contains('show')`);
+await evalJs(`document.querySelector('.tune[data-id="new"]').click()`); await sleep(200);
+const shownForNew = await evalJs(`document.getElementById('stylebox').classList.contains('show')`);
+check('style box only shows for a Gemini melody', hiddenForBuiltin && shownForNew, `builtin=${hiddenForBuiltin ? 'hidden' : 'shown'} new=${shownForNew ? 'shown' : 'hidden'}`);
+const style = 'spooky 8-bit ' + Date.now() % 1000;
+await evalJs(`(() => { const i = document.getElementById('style'); i.value = ${JSON.stringify(style)}; i.dispatchEvent(new Event('input', {bubbles:true})); })()`);
+await evalJs(`document.getElementById('set').click()`); await sleep(1500);
+const st4 = await backend();
+check('backend settings.tuneStyle saved', st4.settings.tuneStyle === style, `backend="${st4.settings.tuneStyle}" expected="${style}"`);
+await sleep(5500);
+check('style input survives the 5 s poll', (await evalJs(`document.getElementById('style').value`)) === style, await evalJs(`document.getElementById('style').value`));
+
 console.log('console/errors:', logs.length ? logs : 'none');
 ws.close();
 process.exit(results.every(Boolean) ? 0 : 1);

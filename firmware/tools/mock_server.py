@@ -35,7 +35,7 @@ HISTORY = [
     {"date": "2026-11-06", "game": "sprint", "tuneId": "gen:2026-11-06_pancake-panic", "tune": "Pancake Panic", "reason": "Gemini chose Dash because mornings are for moving.", "completed": True},
     {"date": "2026-11-07", "game": "reaction", "tuneId": "builtin:wasp_nest", "tune": "Wasp Nest", "reason": "", "completed": False},
 ]
-settings = {"alarmTime": "07:30", "enabled": True, "gameId": "random", "tuneId": "new", "distanceM": 6}
+settings = {"alarmTime": "07:30", "enabled": True, "gameId": "random", "tuneId": "new", "distanceM": 6, "tuneStyle": ""}
 plan_ready_at = 0.0
 ringing_until = 0.0
 # The fake board boots with no idea of the time (like a real one with no NTP): wrong by -5h17m and
@@ -81,7 +81,8 @@ class H(BaseHTTPRequestHandler):
         global plan_ready_at, ringing_until, clock_offset, clock_source
         n = int(self.headers.get("Content-Length", 0)); body = json.loads(self.rfile.read(n) or b"{}")
         if self.path == "/api/settings":
-            settings.update({k: body[k] for k in ("alarmTime", "gameId", "tuneId", "distanceM") if k in body})
+            settings.update({k: body[k] for k in ("alarmTime", "gameId", "tuneId", "distanceM", "tuneStyle") if k in body})
+            if settings.get("tuneStyle"): print(f"   Gemini would compose in style: {settings['tuneStyle']!r}")
             plan_ready_at = time.time() + 6; s = state(); s["ok"] = True; self._json(s)
         elif self.path == "/api/test": ringing_until = time.time() + 8; self._json({"ok": True, "msg": "alarm starting"})
         elif self.path == "/api/stop": ringing_until = 0; self._json({"ok": True, "msg": "stopping"})

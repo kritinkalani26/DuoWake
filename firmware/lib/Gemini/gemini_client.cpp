@@ -68,7 +68,7 @@ void GeminiClient::begin(const char* apiKey) {
 
 String GeminiClient::lastStatus() { return _lastStatus; }
 
-bool GeminiClient::generateMelody(const String& existingNames, Melody& out, String& err) {
+bool GeminiClient::generateMelody(const String& existingNames, const String& style, Melody& out, String& err) {
   JsonDocument schema;
   deserializeJson(schema, R"({
     "type":"OBJECT",
@@ -83,8 +83,11 @@ bool GeminiClient::generateMelody(const String& existingNames, Melody& out, Stri
     "wake-up melody of 8 to 16 notes. Rules: note names must be from C5 to B6 ONLY (two octaves: C5 C#5 D5 ... B5 C6 ... B6) using sharps, never flats, never octave 4 (e.g. C5, F#5, A#6) "
     "or REST; every duration 'ms' must be an integer between 50 and 2000 (mostly 80-300 for energy). "
     "Give it a fun, memorable 2-3 word name. Melodies that already exist (do NOT reuse these names, make something "
-    "different in feel): " + (existingNames.length() ? existingNames : String("none")) + ". "
-    "Return only JSON matching the schema.";
+    "different in feel): " + (existingNames.length() ? existingNames : String("none")) + ". ";
+  if (style.length()) {
+    prompt += "The user asked for this style or mood, follow it as closely as the buzzer allows and let the name reflect it: \"" + style + "\". ";
+  }
+  prompt += "Return only JSON matching the schema.";
 
   for (uint8_t attempt = 1; attempt <= 2; attempt++) {
     String text;

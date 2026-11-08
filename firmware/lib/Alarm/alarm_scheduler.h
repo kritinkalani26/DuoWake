@@ -13,6 +13,7 @@ struct AlarmSettings {
   String  game = "reaction";       // game id | "random" | "surprise"
   String  tune = "builtin:siren_stairs";  // builtin:<slug> | gen:<file> | new | shuffle
   float   distanceMeters = 5.0f;
+  String  tuneStyle = "";          // free text for Gemini ("spooky", "8-bit boss fight"); only used for new melodies
 };
 
 struct AlarmPlan {

@@ -15,7 +15,7 @@
 #include "web_options.h"
 
 // ---- fake state ----
-static String alarmTime = "07:30", gameId = "random", tuneId = "new";
+static String alarmTime = "07:30", gameId = "random", tuneId = "new", tuneStyle = "";
 static float  distanceM = 6;
 static bool   ringing = false;
 static uint32_t ringUntil = 0;
@@ -30,7 +30,7 @@ static void stateJson(JsonDocument& d) {
   d["timeSource"] = TimeKeeper::source(); d["uptime"] = now / 1000;
   d["isRinging"] = ringing; d["ringingGame"] = ringing ? planGame : "";
   JsonObject js = d["settings"].to<JsonObject>();
-  js["alarmTime"] = alarmTime; js["enabled"] = true; js["gameId"] = gameId; js["tuneId"] = tuneId; js["distanceM"] = distanceM;
+  js["alarmTime"] = alarmTime; js["enabled"] = true; js["gameId"] = gameId; js["tuneId"] = tuneId; js["distanceM"] = distanceM; js["tuneStyle"] = tuneStyle;
   // next alarm = today/tomorrow at alarmTime
   time_t t = time(nullptr); struct tm tm; localtime_r(&t, &tm);
   tm.tm_hour = alarmTime.substring(0, 2).toInt(); tm.tm_min = alarmTime.substring(3).toInt(); tm.tm_sec = 0;
@@ -72,7 +72,7 @@ static bool applySettings(JsonVariantConst in, String& err) {
   if (t.length() != 5) { err = "alarmTime must be HH:MM"; return false; }
   if (!GameRegistry::exists(g.c_str()) && !GameRegistry::isPseudo(g.c_str())) { err = "unknown gameId: " + g; return false; }
   if (!MelodyStore::isValidTuneId(tu)) { err = "unknown tuneId: " + tu; return false; }
-  alarmTime = t; gameId = g; tuneId = tu; distanceM = in["distanceM"] | distanceM;
+  alarmTime = t; gameId = g; tuneId = tu; distanceM = in["distanceM"] | distanceM; tuneStyle = String((const char*)(in["tuneStyle"] | tuneStyle.c_str()));
   planGame = GameRegistry::exists(g.c_str()) ? g : GameRegistry::randomName();
   planReadyAt = millis() + 6000;
   Serial.printf("[test] settings: %s game=%s tune=%s dist=%.1f (plan 'ready' in 6 s)\n", t.c_str(), g.c_str(), tu.c_str(), distanceM);

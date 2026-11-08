@@ -56,6 +56,7 @@ namespace {
     js["gameId"] = s.game;
     js["tuneId"] = s.tune;
     js["distanceM"] = s.distanceMeters;
+    js["tuneStyle"] = s.tuneStyle;
     d["nextAlarm"] = AlarmScheduler::nextAlarmIso();
     d["nextAlarmEpoch"] = (uint32_t)AlarmScheduler::nextAlarmEpoch();
     JsonObject jp = d["plan"].to<JsonObject>();
@@ -104,8 +105,11 @@ namespace {
     if (!MelodyStore::isValidTuneId(tune)) { err = "unknown tuneId: " + tune; return false; }
     float dist = in["distanceM"] | s.distanceMeters;
     if (dist < 0.5f || dist > 200.0f) { err = "distanceM out of range"; return false; }
+    String style = in["tuneStyle"] | s.tuneStyle;   // optional; omitted = keep the old one
+    style.trim();
+    if (style.length() > 80) style = style.substring(0, 80);
     s.hour = h; s.minute = mi; s.enabled = in["enabled"] | true;
-    s.game = game; s.tune = tune; s.distanceMeters = dist;
+    s.game = game; s.tune = tune; s.distanceMeters = dist; s.tuneStyle = style;
     AlarmScheduler::saveSettings();
     AlarmPrep::requestPrep();
     return true;

@@ -28,7 +28,7 @@ static void runGemini() {
   Melody m;
   String names = MelodyStore::allNames();
   Serial.printf("existing: %s\n", names.c_str());
-  if (GeminiClient::generateMelody(names, m, err)) {
+  if (GeminiClient::generateMelody(names, "", m, err)) {
     Serial.printf("MELODY OK: %s\n", MelodyFormat::toJson(m).c_str());
     String id = MelodyStore::save(m, TimeKeeper::dateString());
     Serial.printf("saved as %s\n", id.c_str());

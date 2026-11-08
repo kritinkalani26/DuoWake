@@ -18,6 +18,7 @@ namespace {
     _s.game = pr.getString("game", "reaction");
     _s.tune = pr.getString("tune", "builtin:siren_stairs");
     _s.distanceMeters = pr.getFloat("dist", 5.0f);
+    _s.tuneStyle = pr.getString("style", "");
     _p.game = pr.getString("pGame", "");
     _p.tune = pr.getString("pTune", "");
     _p.melodyName = pr.getString("pName", "");
@@ -31,8 +32,8 @@ namespace {
 
 void AlarmScheduler::begin() {
   loadAll();
-  Serial.printf("[alarm] settings: %02u:%02u %s game=%s tune=%s dist=%.1f m\n",
-                _s.hour, _s.minute, _s.enabled ? "ON" : "off", _s.game.c_str(), _s.tune.c_str(), _s.distanceMeters);
+  Serial.printf("[alarm] settings: %02u:%02u %s game=%s tune=%s dist=%.1f m style=\"%s\"\n",
+                _s.hour, _s.minute, _s.enabled ? "ON" : "off", _s.game.c_str(), _s.tune.c_str(), _s.distanceMeters, _s.tuneStyle.c_str());
   Serial.printf("[alarm] plan: %s game=%s tune=%s (%s) reason=\"%s\"\n",
                 planIsCurrent() ? "ready" : "NOT READY", _p.game.c_str(), _p.tune.c_str(), _p.melodyName.c_str(), _p.reason.c_str());
 }
@@ -42,7 +43,7 @@ AlarmPlan& AlarmScheduler::plan() { return _p; }
 void AlarmScheduler::onFire(AlarmFireHandler h) { _onFire = h; }
 
 String AlarmScheduler::settingsFingerprint() {
-  return _s.game + "|" + _s.tune;
+  return _s.game + "|" + _s.tune + "|" + _s.tuneStyle;
 }
 
 bool AlarmScheduler::planIsCurrent() {
@@ -58,12 +59,13 @@ void AlarmScheduler::saveSettings() {
     pr.putString("game", _s.game);
     pr.putString("tune", _s.tune);
     pr.putFloat("dist", _s.distanceMeters);
+    pr.putString("style", _s.tuneStyle);
     pr.putString("fired", "");
     pr.end();
   }
   _firedDate = "";  // a freshly saved alarm may fire again today
-  Serial.printf("[alarm] saved: %02u:%02u %s game=%s tune=%s dist=%.1f\n",
-                _s.hour, _s.minute, _s.enabled ? "ON" : "off", _s.game.c_str(), _s.tune.c_str(), _s.distanceMeters);
+  Serial.printf("[alarm] saved: %02u:%02u %s game=%s tune=%s dist=%.1f style=\"%s\"\n",
+                _s.hour, _s.minute, _s.enabled ? "ON" : "off", _s.game.c_str(), _s.tune.c_str(), _s.distanceMeters, _s.tuneStyle.c_str());
 }
 
 void AlarmScheduler::savePlan() {
